@@ -1,493 +1,509 @@
-import React, { useState, useRef, useEffect } from 'react'
-import ThinkingState from './components/ThinkingState'
-import AnswerBlock from './components/AnswerBlock'
-import SuggestionCards from './components/SuggestionCards'
-import SignIn from './components/SignIn'
-import ChatHistorySidebar from './components/ChatHistorySidebar'
-import ProjectsSidebar from './components/ProjectsSidebar'
-import { MOCK_QA, INITIAL_SUGGESTIONS, MOCK_PROJECTS, getAnswerForQuestion } from './data/mockData'
+import React, { useState, useEffect } from 'react'
 
-// ─── Nav Logo ─────────────────────────────────────────────────────────────────
-function NavLogo({ onClick, theme }) {
+function Nav({ activeSection }) {
+  const sections = [
+    { id: 'mission',   label: 'Mission' },
+    { id: 'challenge', label: 'Challenge' },
+    { id: 'human',     label: 'Human Cost' },
+    { id: 'villain',   label: 'The Villain' },
+    { id: 'action',    label: 'Kurious in Action' },
+    { id: 'formats',   label: 'Formats' },
+    { id: 'results',   label: 'Results' },
+    { id: 'cta',       label: 'Get Started' },
+  ]
   return (
-    <button onClick={onClick} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
-      <img
-        src="./logo.png"
-        alt="AIntropy"
-        className={`w-8 h-8 rounded-lg object-cover ${theme === 'light' ? '' : 'mix-blend-lighten'}`}
-      />
-      <span className="font-bold text-[15px] tracking-tight text-k-text">Kurious</span>
-    </button>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0D0D0D]/90 backdrop-blur border-b border-[#2A2A2A] px-6 h-14 flex items-center justify-between">
+      <div className="flex items-center gap-2.5">
+        <img src="./logo.png" alt="AIntropy" className="w-7 h-7 rounded-lg object-cover mix-blend-lighten" />
+        <span className="font-bold text-sm tracking-tight text-white">
+          <span className="text-[#00D4FF]">AI</span>ntropy
+          <span className="text-[#A0A0A0] font-normal ml-2">· Kurious</span>
+        </span>
+      </div>
+      <div className="hidden md:flex items-center gap-1">
+        {sections.map(s => (
+          <a key={s.id} href={'#'+s.id} className={'text-xs px-3 py-1.5 rounded-lg transition-colors ' + (activeSection === s.id ? 'text-[#00D4FF] bg-[#00D4FF]/10' : 'text-[#A0A0A0] hover:text-white')}>
+            {s.label}
+          </a>
+        ))}
+      </div>
+      <a href="#cta" className="text-xs font-medium text-[#0D0D0D] bg-[#00D4FF] hover:bg-cyan-300 transition-colors rounded-lg px-3 py-1.5">Request Access</a>
+    </nav>
   )
 }
 
-// ─── Profile Dropdown ─────────────────────────────────────────────────────────
-function ProfileMenu({ onSignOut, theme, onThemeChange }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
+function MissionSection() {
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-8 h-8 rounded-full bg-gradient-to-br from-k-cyan to-k-teal flex items-center justify-center text-k-bg text-sm font-bold transition-all ${
-          open ? 'ring-2 ring-k-cyan ring-offset-2 ring-offset-k-nav' : 'hover:ring-2 hover:ring-k-cyan/40 hover:ring-offset-1 hover:ring-offset-k-nav'
-        }`}
-      >
-        K
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-10 w-56 bg-k-card border border-k-border rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in">
-          <div className="px-4 py-3 border-b border-k-border">
-            <p className="text-sm font-semibold text-k-text">Kunal Sawarkar</p>
-            <p className="text-xs text-k-muted mt-0.5">kunal@aintropy.ai</p>
-            <p className="text-xs text-k-muted/60 mt-0.5">Organization's Name.INC</p>
-          </div>
-
-          {/* Theme toggle */}
-          <div className="px-4 py-3 border-b border-k-border">
-            <p className="text-xs text-k-muted mb-2">Theme</p>
-            <div className="flex items-center gap-1 bg-k-bg border border-k-border rounded-lg p-1">
-              <button
-                onClick={() => onThemeChange('light')}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  theme === 'light' ? 'bg-k-card text-k-text shadow-sm' : 'text-k-muted hover:text-k-text'
-                }`}
-              >
-                ☀️ Light
-              </button>
-              <button
-                onClick={() => onThemeChange('dark')}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  theme === 'dark' ? 'bg-k-card text-k-text shadow-sm' : 'text-k-muted hover:text-k-text'
-                }`}
-              >
-                🌙 Dark
-              </button>
-            </div>
-          </div>
-
-          <div className="py-1">
-            <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-k-muted hover:text-k-text hover:bg-k-bg transition-colors">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-              Account Settings
-            </button>
-            <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-k-muted hover:text-k-text hover:bg-k-bg transition-colors">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2"/><path d="M7 4.5v3l1.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-              Help & Support
-            </button>
-          </div>
-          <div className="border-t border-k-border py-1">
-            <button
-              onClick={() => { setOpen(false); onSignOut() }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-k-error hover:bg-k-error/10 transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 7h6M8.5 5L11 7l-2.5 2M8 2H3a1 1 0 00-1 1v8a1 1 0 001 1h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Sign out
-            </button>
-          </div>
+    <section id="mission" className="min-h-screen flex flex-col items-center justify-center px-6 py-24 text-center relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none" style={{background:'radial-gradient(ellipse at center, rgba(0,212,255,0.05) 0%, transparent 70%)'}} />
+      <div className="max-w-4xl mx-auto relative z-10">
+        <div className="inline-flex items-center gap-2 border border-[#00D4FF]/30 rounded-full px-4 py-1.5 mb-8 bg-[#00D4FF]/5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] animate-pulse" />
+          <span className="text-xs text-[#00D4FF] font-medium">AIntropy Universal Knowledge Perception</span>
         </div>
-      )}
-    </div>
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          The Hippocampus of<br /><span className="text-[#00D4FF]">Your Private AI</span>
+        </h1>
+        <p className="text-xl text-[#A0A0A0] mb-6 max-w-2xl mx-auto leading-relaxed">
+          95% of your organisation's knowledge is invisible to AI. It lives in PDFs, spreadsheets, videos, images — locked away, disconnected, unreachable.
+        </p>
+        <p className="text-lg text-[#A0A0A0]/70 mb-12 max-w-2xl mx-auto leading-relaxed">
+          AIntropy teaches AI to perceive, connect, and reason across every format of private knowledge — without training, without fine-tuning, at enterprise scale.
+        </p>
+        <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-12">
+          {[{value:'20-80×',label:'Cost Reduction'},{value:'82%',label:'Benchmark Accuracy'},{value:'Days',label:'To Production'}].map(s => (
+            <div key={s.label} className="border border-[#2A2A2A] rounded-xl p-4 bg-[#1A1A1A]">
+              <p className="text-2xl font-bold text-[#00D4FF] mb-1">{s.value}</p>
+              <p className="text-xs text-[#A0A0A0]">{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <a href="#challenge" className="inline-flex items-center gap-2 text-sm text-[#A0A0A0] hover:text-[#00D4FF] transition-colors">
+          See the challenge we're solving
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v8M4 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </a>
+      </div>
+    </section>
   )
 }
 
-// ─── Search Bar ───────────────────────────────────────────────────────────────
-function SearchBar({ value, onChange, onSubmit, mode, onModeChange, disabled }) {
-  const isActive = value.trim().length > 0
-  const placeholder = mode === 'quick'
-    ? 'Go ahead — I answer at the speed of thought.'
-    : 'Ask the tough ones — I dig deeper so you don\'t have to.'
-
-  const handleKey = (e) => {
-    if (e.key === 'Enter' && isActive && !disabled) onSubmit(value)
-  }
-
+function ChallengeSection() {
+  const formats = [
+    {icon:'📄',label:'PDF',count:'353 files'},{icon:'📊',label:'CSV',count:'233 files'},
+    {icon:'{}',label:'JSON',count:'110 files'},{icon:'📈',label:'XLSX',count:'57 files'},
+    {icon:'🗜️',label:'ZIP',count:'27 files'},{icon:'📉',label:'XLS',count:'4 files'},
+    {icon:'🖼️',label:'JPEG',count:'4 files'},{icon:'📝',label:'DOC',count:'1 file'},
+  ]
+  const agencies = ['Health','Education','Transport','Treasury','Justice','Corrections','Environment','Labor','Agriculture','Human Svcs','Public Safety','Veterans','Military','State','Banking','Children','Community','Insurance','Tech & Comm','Law & Safety','Pensions','Motor Veh','Economic Dev']
+  const reasons = [
+    {icon:'🔍',text:'23 agencies, zero cross-references'},{icon:'🧩',text:'8 formats, inconsistent schemas'},
+    {icon:'⚠️',text:'No unified metadata or standards'},{icon:'🌐',text:'Text, tables, images — all isolated'},
+  ]
   return (
-    <div className="w-full">
-      <div className={`relative flex items-center border rounded-xl transition-all duration-200 bg-k-card ${
-        disabled ? 'border-k-border' : isActive ? 'border-k-cyan shadow-[0_0_0_1px_rgba(0,212,255,0.2)]' : 'border-k-border hover:border-k-muted'
-      }`}>
-        <input
-          type="text"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          onKeyDown={handleKey}
-          disabled={disabled}
-          placeholder={placeholder}
-          className="search-input flex-1 bg-transparent px-5 py-4 text-[15px] text-k-text placeholder-k-muted/60 disabled:opacity-60"
-        />
-        <button
-          onClick={() => isActive && !disabled && onSubmit(value)}
-          disabled={!isActive || disabled}
-          className={`mr-3 w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-            isActive && !disabled
-              ? 'bg-k-cyan text-k-bg hover:bg-cyan-300 cursor-pointer'
-              : 'bg-k-border text-k-muted cursor-not-allowed'
-          }`}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 12V4M4 8l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
-      <div className="flex items-center gap-4 mt-2 ml-1">
-        <button
-          onClick={() => onModeChange('quick')}
-          className={`text-xs font-medium transition-colors ${mode === 'quick' ? 'text-k-cyan' : 'text-k-muted hover:text-k-text'}`}
-        >
-          ⚡ Quick
-        </button>
-        <span className="text-k-border text-xs">·</span>
-        <button
-          onClick={() => onModeChange('deeper')}
-          className={`text-xs font-medium transition-colors ${mode === 'deeper' ? 'text-purple-400' : 'text-k-muted hover:text-k-text'}`}
-        >
-          🔍 Deep Dive
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ─── Project Header (shown in center when a project is active) ────────────────
-function ProjectHeader({ project, onManageMembers }) {
-  const [showMembers, setShowMembers] = useState(false)
-
-  return (
-    <div className="mb-8 pb-6 border-b border-k-border">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xl font-bold text-k-text">{project.name}</h2>
-        <button
-          onClick={() => setShowMembers(!showMembers)}
-          className="flex items-center gap-2 text-xs text-k-muted hover:text-k-cyan transition-colors border border-k-border rounded-lg px-3 py-1.5 hover:border-k-cyan/50"
-        >
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.2"/><path d="M1 11c0-2.21 1.79-4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><circle cx="10" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.2"/><path d="M7 11c0-2.21 1.79-4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-          {project.memberCount} members
-        </button>
-      </div>
-      <p className="text-sm text-k-muted">{project.chatCount} chats · Last active {project.lastActive}</p>
-
-      {/* Inline members summary */}
-      {showMembers && (
-        <div className="mt-4 p-4 bg-k-card border border-k-border rounded-xl animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-medium text-k-muted uppercase tracking-wider">Members</p>
-            <button
-              onClick={onManageMembers}
-              className="text-xs text-k-cyan hover:text-cyan-300 transition-colors"
-            >
-              Manage →
-            </button>
-          </div>
-          <div className="space-y-2">
-            {project.members.map(m => (
-              <div key={m.id} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-k-cyan/20 border border-k-border flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs text-k-cyan font-medium">{m.name.charAt(0)}</span>
-                </div>
-                <span className="text-sm text-k-text flex-1">{m.name}</span>
-                <span className={`text-xs ${m.role === 'Admin' ? 'text-k-cyan' : m.role === 'Contributor' ? 'text-purple-400' : 'text-k-muted'}`}>{m.role}</span>
+    <section id="challenge" className="min-h-screen px-6 py-24">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-16">
+          <span className="text-xs font-medium text-[#00D4FF] uppercase tracking-widest mb-4 block">The Challenge</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">The Data Landscape</h2>
+          <p className="text-[#A0A0A0] text-lg">789 files. 23 agencies. Zero connections.</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+          {[{value:'57.8M',label:'Records'},{value:'789',label:'Files'},{value:'23',label:'Agencies'},{value:'8',label:'Formats'}].map(s => (
+            <div key={s.label} className="border border-[#2A2A2A] rounded-xl p-6 bg-[#1A1A1A] text-center">
+              <p className="text-3xl font-bold text-[#00D4FF] mb-1">{s.value}</p>
+              <p className="text-sm text-[#A0A0A0]">{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mb-16">
+          <h3 className="text-lg font-semibold text-white mb-6 text-center">8 Incompatible Formats</h3>
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+            {formats.map(f => (
+              <div key={f.label} className="border border-[#2A2A2A] rounded-xl p-3 bg-[#1A1A1A] text-center">
+                <p className="text-xl mb-1">{f.icon}</p>
+                <p className="text-xs font-bold text-white">{f.label}</p>
+                <p className="text-[10px] text-[#A0A0A0] mt-0.5">{f.count}</p>
               </div>
             ))}
           </div>
         </div>
-      )}
-    </div>
+        <div className="mb-16">
+          <h3 className="text-lg font-semibold text-white mb-6 text-center">Why LLMs Fail</h3>
+          <div className="grid grid-cols-2 gap-4">
+            {reasons.map(r => (
+              <div key={r.text} className="border border-[#2A2A2A] rounded-xl p-4 bg-[#1A1A1A] flex items-center gap-3">
+                <span className="text-xl">{r.icon}</span>
+                <p className="text-sm text-[#A0A0A0]">{r.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="border border-[#2A2A2A] rounded-2xl p-8 bg-[#1A1A1A]">
+          <h3 className="text-lg font-semibold text-white mb-6 text-center">23 Isolated Agency Silos</h3>
+          <div className="flex flex-wrap gap-2 justify-center mb-6">
+            {agencies.map(a => (
+              <span key={a} className="text-xs border border-[#2A2A2A] rounded-full px-3 py-1.5 text-[#A0A0A0] bg-[#0D0D0D]">{a}</span>
+            ))}
+          </div>
+          <div className="border border-[#EF4444]/30 rounded-xl p-4 bg-[#EF4444]/5 text-center">
+            <p className="text-sm text-white">
+              <span className="text-[#EF4444] font-semibold">The Problem: </span>
+              LLMs cannot connect a pension CSV to a policy PDF to a budget XLSX. <span className="font-semibold">The knowledge exists — but it's shattered across 23 isolated silos.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
-// ─── Idle Screen ──────────────────────────────────────────────────────────────
-function IdleScreen({ isFirstVisit, inputValue, onInputChange, onSubmit, mode, onModeChange, onSuggestionSelect, projectName }) {
-  const isTyping = inputValue.length > 0
-  const idleSuggestions = INITIAL_SUGGESTIONS.slice(0, 2)
-  const typingSuggestions = MOCK_QA.filter(q => !idleSuggestions.includes(q.question)).slice(0, 3).map(q => q.question)
-
+function HumanCostSection() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-6 pb-20">
-      <div className="w-full max-w-2xl">
-        <div className={`transition-all duration-300 text-center mb-10 ${
-          isTyping ? 'opacity-0 -translate-y-8 pointer-events-none h-0 mb-0 overflow-hidden' : 'opacity-100 translate-y-0'
-        }`}>
-          {projectName ? (
-            <>
-              <h1 className="text-3xl font-bold text-k-text mb-2">Welcome back, Kunal.</h1>
-              <p className="text-k-muted text-lg">Searching within <span className="text-k-cyan">{projectName}</span> — what do you want to know?</p>
-            </>
-          ) : isFirstVisit ? (
-            <>
-              <h1 className="text-3xl font-bold text-k-text mb-2">Welcome to Kurious, Kunal.</h1>
-              <p className="text-k-muted text-lg">Your AI-powered knowledge engine — what do you want to explore?</p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-3xl font-bold text-k-text mb-2">Welcome back, Kunal.</h1>
-              <p className="text-k-muted text-lg">Kurious is ready — what do you want to know today?</p>
-            </>
+    <section id="human" className="min-h-screen flex items-center px-6 py-24 bg-[#111111]">
+      <div className="max-w-5xl mx-auto w-full">
+        <div className="text-center mb-16">
+          <span className="text-xs font-medium text-[#00D4FF] uppercase tracking-widest mb-4 block">The Human Cost</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Before Kurious</h2>
+          <p className="text-[#A0A0A0] text-lg">What this problem costs in human time and effort</p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="border border-[#2A2A2A] rounded-2xl p-8 bg-[#1A1A1A]">
+            <div className="w-12 h-12 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-center justify-center mb-6 text-2xl">👤</div>
+            <h3 className="text-xl font-bold text-white mb-4">A Government Analyst's Week</h3>
+            <div className="space-y-4">
+              {[
+                {day:'Day 1',task:'Manually searches 353 PDF files across 23 agency portals'},
+                {day:'Day 2',task:'Cross-references 233 CSV files with inconsistent column names and schemas'},
+                {day:'Day 3',task:'Finally assembles a partial answer — missing data from 4 agencies'},
+              ].map(item => (
+                <div key={item.day} className="flex items-start gap-3">
+                  <span className="text-xs font-bold px-2 py-1 rounded bg-[#EF4444]/10 text-[#EF4444] flex-shrink-0 mt-0.5">{item.day}</span>
+                  <p className="text-sm text-[#A0A0A0]">{item.task}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="border border-[#00D4FF]/30 rounded-2xl p-8 bg-[#00D4FF]/5">
+            <div className="w-12 h-12 rounded-xl bg-[#00D4FF]/10 border border-[#00D4FF]/20 flex items-center justify-center mb-6 text-2xl">⚡</div>
+            <h3 className="text-xl font-bold text-white mb-4">With Kurious</h3>
+            <div className="space-y-4">
+              {[
+                'Cross-references all 789 files across 23 agencies simultaneously',
+                'Reads PDFs, CSVs, JSONs, images — all in one query',
+                'Returns a complete, cited, accurate answer — every time',
+              ].map(task => (
+                <div key={task} className="flex items-start gap-3">
+                  <span className="text-xs font-bold px-2 py-1 rounded bg-[#00D4FF]/10 text-[#00D4FF] flex-shrink-0 mt-0.5">0.18s</span>
+                  <p className="text-sm text-[#A0A0A0]">{task}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="border border-[#2A2A2A] rounded-2xl p-8 bg-[#1A1A1A] text-center">
+          <div className="grid grid-cols-3 gap-8 items-center">
+            <div><p className="text-4xl font-bold text-[#EF4444] mb-2">3 Days</p><p className="text-sm text-[#A0A0A0]">Manual research time</p></div>
+            <div className="text-[#A0A0A0] text-2xl font-light">→</div>
+            <div><p className="text-4xl font-bold text-[#00D4FF] mb-2">0.18s</p><p className="text-sm text-[#A0A0A0]">With Kurious</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function VillainSection() {
+  return (
+    <section id="villain" className="min-h-screen flex items-center px-6 py-24">
+      <div className="max-w-5xl mx-auto w-full">
+        <div className="text-center mb-16">
+          <span className="text-xs font-medium text-[#EF4444] uppercase tracking-widest mb-4 block">Why Existing Solutions Fail</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">The Villain: Plain RAG</h2>
+          <p className="text-[#A0A0A0] text-lg">The two most common approaches — and why they break at enterprise scale</p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
+          {[
+            {icon:'🤖',title:'Plain RAG',sub:'Breaks at scale',items:["Only works on text — can't read images, videos or complex tables","No cross-agency reasoning — treats each file in isolation","Inconsistent schemas break retrieval entirely","Accuracy collapses as data volume grows","No understanding of document structure or hierarchy"]},
+            {icon:'⚙️',title:'Fine-tuning',sub:'Too expensive, too slow',items:["Requires months of training before any results","1 trillion+ parameter models = massive cost","Data changes daily — retraining never ends","Can't adapt to new formats without full retraining","Not viable for 57M+ document enterprise datasets"]},
+          ].map(card => (
+            <div key={card.title} className="border border-[#EF4444]/20 rounded-2xl p-8 bg-[#EF4444]/5">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-3xl">{card.icon}</span>
+                <div><h3 className="text-lg font-bold text-white">{card.title}</h3><p className="text-xs text-[#EF4444]">{card.sub}</p></div>
+              </div>
+              <div className="space-y-3">
+                {card.items.map(item => (
+                  <div key={item} className="flex items-start gap-2">
+                    <span className="text-[#EF4444] mt-0.5 flex-shrink-0">✕</span>
+                    <p className="text-sm text-[#A0A0A0]">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="border border-[#00D4FF]/30 rounded-2xl p-8 bg-[#00D4FF]/5">
+          <div className="flex items-center gap-3 mb-6">
+            <img src="./logo.png" alt="AIntropy" className="w-10 h-10 rounded-xl object-cover mix-blend-lighten" />
+            <div><h3 className="text-lg font-bold text-white">AIntropy Kurious</h3><p className="text-xs text-[#00D4FF]">The alternative that actually works</p></div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              {icon:'🚀',title:'Zero training',desc:'Connect your data and go live in days, not months'},
+              {icon:'🧠',title:'Natively multimodal',desc:'PDF, CSV, JSON, JPEG, video — all formats, one engine'},
+              {icon:'💰',title:'20-80× cheaper',desc:'Uses 70B parameter models vs 1T+ for competitors'},
+            ].map(item => (
+              <div key={item.title} className="border border-[#00D4FF]/20 rounded-xl p-4 bg-[#0D0D0D]">
+                <span className="text-2xl mb-2 block">{item.icon}</span>
+                <p className="text-sm font-semibold text-white mb-1">{item.title}</p>
+                <p className="text-xs text-[#A0A0A0]">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ActionSection() {
+  const [step, setStep] = useState(0)
+  const [comparisonLLM, setComparisonLLM] = useState('ChatGPT')
+  const query = "Which NJ counties have the highest pension liabilities AND the lowest education budgets?"
+  const kuriousAnswer = "Bergen County has the highest pension liability at $4.2B while ranking 18th in per-pupil education spending ($14,200). Essex County follows with $3.8B in pension obligations and 21st in education funding. Hudson County shows the starkest imbalance — $3.1B in pension debt against the lowest per-pupil spend in the state at $11,800. This cross-agency analysis draws from Pensions Division records, Treasury budget allocations, and DOE enrollment data."
+  const otherAnswer = "I don't have access to New Jersey's government databases or the 57 million documents in the NJ Open Data archive. I can provide general information about NJ county finances, but specific current figures connecting pension liabilities to education budgets across all 23 agencies require data I cannot access."
+  const handleQuery = () => { setStep(1); setTimeout(() => setStep(2), 2500) }
+  return (
+    <section id="action" className="min-h-screen px-6 py-24 bg-[#111111]">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-16">
+          <span className="text-xs font-medium text-[#00D4FF] uppercase tracking-widest mb-4 block">Kurious in Action</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">The Wow Moment</h2>
+          <p className="text-[#A0A0A0] text-lg">One query. Three agencies. Zero manual work.</p>
+        </div>
+        <div className="border border-[#2A2A2A] rounded-2xl p-6 bg-[#1A1A1A] mb-6">
+          <p className="text-xs text-[#A0A0A0] mb-3 uppercase tracking-wider">Query</p>
+          <p className="text-white font-medium text-lg mb-4">"{query}"</p>
+          <div className="flex items-center gap-3 flex-wrap mb-5">
+            {['Pensions Division (CSV)','Treasury Budget (XLSX)','DOE Enrollment (PDF)'].map(s => (
+              <span key={s} className="text-xs border border-[#2A2A2A] rounded-full px-3 py-1 text-[#A0A0A0] bg-[#0D0D0D]">🔗 {s}</span>
+            ))}
+          </div>
+          {step === 0 && (
+            <button onClick={handleQuery} className="bg-[#00D4FF] text-[#0D0D0D] font-semibold rounded-xl px-6 py-3 text-sm hover:bg-cyan-300 transition-colors">⚡ Ask Kurious</button>
           )}
         </div>
-
-        <SearchBar value={inputValue} onChange={onInputChange} onSubmit={onSubmit} mode={mode} onModeChange={onModeChange} disabled={false} />
-
-        <p className="text-xs text-k-muted/60 mt-4 text-center">
-          Ask about anything — videos, documents, data, images and more.
-        </p>
-
-        {!isTyping && (
-          <div className="mt-8 animate-fade-in">
-            <SuggestionCards suggestions={idleSuggestions} onSelect={onSuggestionSelect} label="Try asking:" />
-          </div>
-        )}
-
-        {isTyping && (
-          <div className="mt-4 animate-fade-in">
-            <p className="text-xs text-k-muted mb-3">You might also ask:</p>
-            <div className="space-y-1">
-              {typingSuggestions.map((s, i) => (
-                <button key={i} onClick={() => onSuggestionSelect(s)} className="block w-full text-left text-sm text-k-muted hover:text-k-cyan transition-colors py-1.5 px-2 rounded-lg hover:bg-k-card">
-                  → {s}
-                </button>
+        {step === 1 && (
+          <div className="border border-[#2A2A2A] rounded-2xl p-6 bg-[#1A1A1A] mb-6 animate-fade-in">
+            <p className="text-xs text-[#A0A0A0] mb-4 uppercase tracking-wider">Kurious is thinking...</p>
+            <div className="space-y-3">
+              {['✓ Understood your question','✓ Searching across 57.8M documents','✓ Cross-referencing Pensions, Treasury & DOE data','⟳ Connecting insights...'].map((s,i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <span className={s.startsWith('⟳') ? 'text-[#00D4FF] animate-spin-slow' : 'text-[#00D4FF]'}>{s.slice(0,1)}</span>
+                  <span className={s.startsWith('⟳') ? 'text-[#00D4FF]' : 'text-[#A0A0A0]'}>{s.slice(2)}</span>
+                </div>
               ))}
             </div>
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-// ─── Conversation Screen ──────────────────────────────────────────────────────
-function ConversationScreen({ conversations, inputValue, onInputChange, onSubmit, mode, onModeChange, isThinking, thinkingMode, onThinkingComplete, latestSuggestions, onSuggestionSelect }) {
-  const bottomRef = useRef(null)
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [conversations, isThinking])
-
-  return (
-    <div className="flex flex-col min-h-[calc(100vh-3.5rem)]">
-      <div className="sticky top-14 z-20 bg-k-bg/95 backdrop-blur border-b border-k-border px-6 py-4">
-        <div className="max-w-2xl mx-auto">
-          <SearchBar value={inputValue} onChange={onInputChange} onSubmit={onSubmit} mode={mode} onModeChange={onModeChange} disabled={isThinking} />
-        </div>
-      </div>
-      <div className="flex-1 px-6 py-8">
-        <div className="max-w-2xl mx-auto space-y-8">
-          {conversations.map((conv, i) => (
-            <AnswerBlock key={conv.id} conversation={conv} isLatest={i === conversations.length - 1 && !isThinking} />
-          ))}
-          {isThinking && <ThinkingState mode={thinkingMode} onComplete={onThinkingComplete} />}
-          {!isThinking && conversations.length > 0 && latestSuggestions.length > 0 && (
-            <div className="animate-fade-in">
-              <SuggestionCards suggestions={latestSuggestions} onSelect={onSuggestionSelect} label="You might also ask:" />
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── App ──────────────────────────────────────────────────────────────────────
-export default function App() {
-  const [theme, setTheme] = useState(() => localStorage.getItem('k-theme') || 'dark')
-
-  useEffect(() => {
-    localStorage.setItem('k-theme', theme)
-    if (theme === 'light') {
-      document.documentElement.classList.add('light')
-    } else {
-      document.documentElement.classList.remove('light')
-    }
-  }, [theme])
-
-  const [isSignedIn, setIsSignedIn]             = useState(false)
-  const [view, setView]                         = useState('myChats') // 'myChats' | 'projects'
-  const [activeProjectId, setActiveProjectId]   = useState(null)
-  const [isFirstVisit, setIsFirstVisit]         = useState(true)
-  const [hasStarted, setHasStarted]             = useState(false)
-  const [inputValue, setInputValue]             = useState('')
-  const [mode, setMode]                         = useState('quick')
-  const [conversations, setConversations]       = useState([])
-  const [isThinking, setIsThinking]             = useState(false)
-  const [thinkingMode, setThinkingMode]         = useState('quick')
-  const [pendingQuestion, setPendingQuestion]   = useState('')
-  const [askedQuestions, setAskedQuestions]     = useState(new Set())
-  const [latestSuggestions, setLatestSuggestions] = useState([])
-  const [membersProject, setMembersProject]     = useState(null)
-  const [demoRole, setDemoRole]                 = useState('Admin')
-
-  const activeProject = MOCK_PROJECTS.find(p => p.id === activeProjectId) || null
-
-  const handleSignIn  = () => setIsSignedIn(true)
-  const handleSignOut = () => { setIsSignedIn(false); handleReset() }
-
-  const handleViewChange = (newView) => {
-    setView(newView)
-    setActiveProjectId(null)
-    handleReset()
-  }
-
-  const handleSubmit = (query) => {
-    if (!query.trim() || isThinking) return
-    setHasStarted(true)
-    setInputValue('')
-    setPendingQuestion(query)
-    setThinkingMode(mode)
-    setIsThinking(true)
-    setLatestSuggestions([])
-    setAskedQuestions(prev => new Set([...prev, query.toLowerCase().trim()]))
-  }
-
-  const handleThinkingComplete = () => {
-    const result = getAnswerForQuestion(pendingQuestion)
-    const newConv = {
-      id: Date.now(),
-      question: pendingQuestion,
-      answer: thinkingMode === 'deeper' ? result.deeperAnswer : result.answer,
-      mode: thinkingMode,
-      time: thinkingMode === 'deeper' ? result.deeperTime : result.time,
-      modalities: result.modalities,
-      modalityText: result.modalityText,
-      sources: result.sources,
-    }
-    setConversations(prev => [...prev, newConv])
-    setIsThinking(false)
-    const newSuggestions = result.suggestions.filter(s => !askedQuestions.has(s.toLowerCase().trim()))
-    setLatestSuggestions(newSuggestions)
-  }
-
-  const handleReset = () => {
-    setHasStarted(false)
-    setConversations([])
-    setInputValue('')
-    setIsThinking(false)
-    setLatestSuggestions([])
-    setAskedQuestions(new Set())
-  }
-
-  // ── Sign-in ──
-  if (!isSignedIn) return <SignIn onSignIn={handleSignIn} />
-
-  const hasSidebar = true // always show sidebar
-
-  return (
-    <div className="min-h-screen bg-k-bg text-k-text font-sans">
-
-      {/* ── Top Nav ── */}
-      <nav className="fixed top-0 left-0 right-0 z-30 bg-k-nav border-b border-k-border px-6 h-14 flex items-center justify-between">
-
-        {/* Left: logo + nav links */}
-        <div className="flex items-center gap-10">
-          <NavLogo onClick={handleReset} theme={theme} />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleViewChange('myChats')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                view === 'myChats' ? 'text-k-text bg-k-card' : 'text-k-muted hover:text-k-text hover:bg-k-card/50'
-              }`}
-            >
-              My Chats
-            </button>
-            <button
-              onClick={() => handleViewChange('projects')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                view === 'projects' ? 'text-k-text bg-k-card' : 'text-k-muted hover:text-k-text hover:bg-k-card/50'
-              }`}
-            >
-              Projects
-            </button>
-          </div>
-        </div>
-
-        {/* Right: demo toggle + org + profile */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-k-muted/40 hidden sm:block">(for demo only)</span>
-            <div className="flex items-center gap-1 bg-k-card border border-k-border rounded-lg px-2 py-1">
-              <button onClick={() => setIsFirstVisit(true)} className={`text-xs px-2 py-0.5 rounded transition-colors ${isFirstVisit ? 'bg-k-cyan text-k-bg font-medium' : 'text-k-muted hover:text-k-text'}`}>First Visit</button>
-              <button onClick={() => setIsFirstVisit(false)} className={`text-xs px-2 py-0.5 rounded transition-colors ${!isFirstVisit ? 'bg-k-cyan text-k-bg font-medium' : 'text-k-muted hover:text-k-text'}`}>Returning</button>
-            </div>
-            {view === 'projects' && (
-              <div className="flex items-center gap-1 bg-k-card border border-k-border rounded-lg px-2 py-1">
-                {['Admin', 'Contributor', 'Viewer'].map(r => (
-                  <button key={r} onClick={() => setDemoRole(r)} className={`text-xs px-2 py-0.5 rounded transition-colors ${demoRole === r ? 'bg-k-cyan text-k-bg font-medium' : 'text-k-muted hover:text-k-text'}`}>{r}</button>
+        {step >= 2 && (
+          <div className="animate-slide-up space-y-6">
+            <div className="border border-[#00D4FF]/30 rounded-2xl p-6 bg-[#1A1A1A]">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs text-[#00D4FF] uppercase tracking-wider font-medium">Kurious Answer</p>
+                <span className="text-xs text-[#00D4FF] font-medium bg-[#00D4FF]/10 border border-[#00D4FF]/20 rounded-full px-2 py-0.5">0.18s · 3 agencies</span>
+              </div>
+              <p className="text-white leading-relaxed mb-5">{kuriousAnswer}</p>
+              <div className="flex items-center gap-3 flex-wrap mb-5">
+                {['📊 Pensions Registry','📈 Treasury XLSX','📄 DOE Report'].map(s => (
+                  <span key={s} className="text-xs border border-[#2A2A2A] rounded-full px-3 py-1 text-[#A0A0A0] bg-[#0D0D0D]">{s}</span>
                 ))}
+              </div>
+              {step === 2 && (
+                <button onClick={() => setStep(3)} className="flex items-center gap-1.5 text-sm text-[#A0A0A0] hover:text-[#00D4FF] transition-colors border border-[#2A2A2A] hover:border-[#00D4FF]/50 rounded-xl px-4 py-2">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="3.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2"/><circle cx="10.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M6 7h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                  Ask another AI
+                </button>
+              )}
+            </div>
+            {step === 3 && (
+              <div className="animate-fade-in">
+                <div className="flex items-center gap-3 mb-4">
+                  <p className="text-sm text-[#A0A0A0]">Compare with:</p>
+                  {['ChatGPT','Claude','Gemini'].map(llm => (
+                    <button key={llm} onClick={() => setComparisonLLM(llm)} className={'text-xs px-3 py-1.5 rounded-lg border transition-colors ' + (comparisonLLM === llm ? 'border-[#00D4FF]/50 text-[#00D4FF] bg-[#00D4FF]/5' : 'border-[#2A2A2A] text-[#A0A0A0] hover:text-white')}>{llm}</button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border border-[#00D4FF]/30 rounded-2xl p-6 bg-[#1A1A1A]">
+                    <p className="text-xs text-[#00D4FF] font-medium mb-3 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded bg-[#00D4FF]/20 border border-[#00D4FF]/30 flex items-center justify-center text-[9px] font-bold">K</span>Kurious
+                    </p>
+                    <p className="text-sm text-white leading-relaxed">{kuriousAnswer}</p>
+                    <p className="text-xs text-[#00D4FF] mt-3">✓ 3 agencies · 0.18s · Fully cited</p>
+                  </div>
+                  <div className="border border-[#2A2A2A] rounded-2xl p-6 bg-[#1A1A1A]">
+                    <p className="text-xs text-[#A0A0A0] font-medium mb-3">{comparisonLLM}</p>
+                    <p className="text-sm text-[#A0A0A0]/80 leading-relaxed italic">{otherAnswer}</p>
+                    <p className="text-xs text-[#A0A0A0]/40 mt-3 flex items-center gap-1.5">
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1"/><path d="M5 3v2" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/><circle cx="5" cy="7" r="0.5" fill="currentColor"/></svg>
+                      No access to NJ Open Data files
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-          <span className="text-xs text-k-muted hidden sm:block">Organization's Name.INC</span>
-          <ProfileMenu onSignOut={handleSignOut} theme={theme} onThemeChange={setTheme} />
+        )}
+      </div>
+    </section>
+  )
+}
+
+function FormatsSection() {
+  const [active, setActive] = useState(0)
+  const formats = [
+    {icon:'📄',label:'PDF',tag:'Unstructured · 353 files',title:'Scanned government reports, handwritten notes, policy documents',challenge:"Traditional AI reads text only — scanned PDFs, annotations and complex layouts are invisible.",example:'NJ Division of Pensions Annual Report 2024 (scanned, 847 pages)',extracted:'Pension liability: $4.2B · Active members: 287,400 · Avg benefit: $31,200/yr · Funded ratio: 64.3%'},
+    {icon:'🖼️',label:'JPEG',tag:'Visual · 4 files',title:'Land use maps, infrastructure diagrams, geographic data',challenge:"No LLM can extract structured data from images — Kurious reads visual content natively.",example:'NJ Land Use / Land Cover Map 2020 (high-res satellite imagery)',extracted:'Impervious surface: 78.4% commercial · 71.2% industrial · EPA violations: 34 municipalities'},
+    {icon:'{}',label:'JSON',tag:'Nested · 110 files',title:'API exports, nested records, inconsistent schemas across agencies',challenge:'Nested JSON with varying schemas across agencies breaks standard parsers and RAG systems.',example:'NJ Business Registry Export — 127,400 professional services records',extracted:'Top industry: Professional Services 18.2% · Fastest growth: Healthcare +12.4% YoY · 78% in top 10'},
+    {icon:'📊',label:'CSV',tag:'Tabular · 233 files',title:'Multi-agency datasets with inconsistent column names and formats',challenge:'Column names differ across agencies — "county_name", "COUNTY", "CountyID" all mean the same thing.',example:'NJ DOE Enrollment Report — 592 school districts, 14 column schema variations',extracted:'Newark: 4,280 migrant students (8.3%) · New Brunswick: highest % at 11.2% · 5 districts exceed 9%'},
+  ]
+  const f = formats[active]
+  return (
+    <section id="formats" className="min-h-screen px-6 py-24">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-16">
+          <span className="text-xs font-medium text-[#00D4FF] uppercase tracking-widest mb-4 block">What Kurious Can Handle</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">The Hardest Formats</h2>
+          <p className="text-[#A0A0A0] text-lg">The formats that break every other solution — Kurious handles them all</p>
         </div>
-      </nav>
-
-      {/* ── Layout: sidebar + content ── */}
-      <div className="pt-14 flex">
-
-        {/* Left sidebar */}
-        {view === 'myChats' && (
-          <ChatHistorySidebar
-            activeChatId={null}
-            onChatSelect={handleReset}
-            onNewChat={handleReset}
-          />
-        )}
-        {view === 'projects' && (
-          <ProjectsSidebar
-            activeProjectId={activeProjectId}
-            onProjectSelect={(id) => { setActiveProjectId(id); handleReset() }}
-            onNewProject={() => {}}
-            demoRole={demoRole}
-          />
-        )}
-
-        {/* Center content */}
-        <div className="flex-1 ml-64">
-          {/* Project header */}
-          {view === 'projects' && activeProject && !hasStarted && (
-            <div className="max-w-2xl mx-auto px-6 pt-8">
-              <ProjectHeader
-                project={activeProject}
-                onManageMembers={() => setMembersProject(activeProject)}
-              />
+        <div className="flex items-center gap-3 mb-8 justify-center">
+          {formats.map((fmt,i) => (
+            <button key={fmt.label} onClick={() => setActive(i)} className={'flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all text-sm font-medium ' + (active===i ? 'border-[#00D4FF]/50 text-[#00D4FF] bg-[#00D4FF]/5' : 'border-[#2A2A2A] text-[#A0A0A0] hover:text-white bg-[#1A1A1A]')}>
+              <span>{fmt.icon}</span>{fmt.label}
+            </button>
+          ))}
+        </div>
+        <div className="border border-[#2A2A2A] rounded-2xl overflow-hidden bg-[#1A1A1A]">
+          <div className="p-8 border-b border-[#2A2A2A]">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">{f.icon}</span>
+              <h3 className="text-2xl font-bold text-white">{f.label}</h3>
+              <span className="text-xs border border-[#2A2A2A] rounded-full px-2 py-0.5 text-[#A0A0A0]">{f.tag}</span>
             </div>
-          )}
-
-          {!hasStarted ? (
-            <IdleScreen
-              isFirstVisit={isFirstVisit}
-              inputValue={inputValue}
-              onInputChange={setInputValue}
-              onSubmit={handleSubmit}
-              mode={mode}
-              onModeChange={setMode}
-              onSuggestionSelect={handleSubmit}
-              projectName={activeProject?.name}
-            />
-          ) : (
-            <ConversationScreen
-              conversations={conversations}
-              inputValue={inputValue}
-              onInputChange={setInputValue}
-              onSubmit={handleSubmit}
-              mode={mode}
-              onModeChange={setMode}
-              isThinking={isThinking}
-              thinkingMode={thinkingMode}
-              onThinkingComplete={handleThinkingComplete}
-              latestSuggestions={latestSuggestions}
-              onSuggestionSelect={handleSubmit}
-            />
-          )}
+            <p className="text-[#A0A0A0] mb-5">{f.title}</p>
+            <div className="border border-[#EF4444]/20 rounded-xl p-4 bg-[#EF4444]/5">
+              <p className="text-sm text-[#A0A0A0]"><span className="text-[#EF4444] font-medium">Why others fail: </span>{f.challenge}</p>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#2A2A2A]">
+            <div className="p-6">
+              <p className="text-xs text-[#A0A0A0] uppercase tracking-wider mb-3">Real NJ Data Example</p>
+              <p className="text-sm text-white font-medium">{f.example}</p>
+            </div>
+            <div className="p-6">
+              <p className="text-xs text-[#00D4FF] uppercase tracking-wider mb-3">What Kurious Extracted</p>
+              <p className="text-sm text-white leading-relaxed">{f.extracted}</p>
+            </div>
+          </div>
         </div>
+      </div>
+    </section>
+  )
+}
+
+function ResultsSection() {
+  return (
+    <section id="results" className="min-h-screen flex items-center px-6 py-24 bg-[#111111]">
+      <div className="max-w-5xl mx-auto w-full">
+        <div className="text-center mb-16">
+          <span className="text-xs font-medium text-[#00D4FF] uppercase tracking-widest mb-4 block">The Results</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Why Now</h2>
+          <p className="text-[#A0A0A0] text-lg">AI is everywhere — but enterprise knowledge is still locked away. This is the window.</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          {[{value:'82%',label:'Accuracy on PubMedQA',sub:'Industry benchmark'},{value:'20-80×',label:'Cost reduction',sub:'vs fine-tuning'},{value:'70B',label:'Parameter models',sub:'vs 1T+ competitors'},{value:'Days',label:'To production',sub:'vs months'}].map(s => (
+            <div key={s.label} className="border border-[#2A2A2A] rounded-xl p-6 bg-[#1A1A1A] text-center">
+              <p className="text-3xl font-bold text-[#00D4FF] mb-1">{s.value}</p>
+              <p className="text-sm text-white font-medium mb-1">{s.label}</p>
+              <p className="text-xs text-[#A0A0A0]">{s.sub}</p>
+            </div>
+          ))}
+        </div>
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          {[
+            {icon:'📈',title:'Enterprise AI is broken',desc:"Every company is buying AI. None of it works on their actual private data. Plain RAG fails at scale. Fine-tuning costs millions."},
+            {icon:'🔓',title:'95% of knowledge is locked',desc:"PDFs, videos, images, spreadsheets — enterprise knowledge lives in formats AI can't read. Until now."},
+            {icon:'⚡',title:'The window is open',desc:"The first solution to crack multimodal enterprise retrieval at scale wins the entire market. We've already done it."},
+          ].map(item => (
+            <div key={item.title} className="border border-[#2A2A2A] rounded-xl p-6 bg-[#1A1A1A]">
+              <span className="text-3xl mb-4 block">{item.icon}</span>
+              <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+              <p className="text-sm text-[#A0A0A0] leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="border border-[#00D4FF]/20 rounded-2xl p-8 bg-[#00D4FF]/5">
+          <h3 className="text-lg font-bold text-white mb-6 text-center">From 7 complex steps to 3</h3>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            {['Connect your data','Call the API','Retrieve answers'].map((s,i) => (
+              <React.Fragment key={s}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#00D4FF] text-[#0D0D0D] flex items-center justify-center text-sm font-bold flex-shrink-0">{i+1}</div>
+                  <p className="text-white font-medium">{s}</p>
+                </div>
+                {i < 2 && <span className="text-[#A0A0A0]">→</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CTASection() {
+  const [email, setEmail] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const handleSubmit = (e) => { e.preventDefault(); if (email.trim()) setSubmitted(true) }
+  return (
+    <section id="cta" className="min-h-screen flex items-center px-6 py-24">
+      <div className="max-w-2xl mx-auto w-full text-center">
+        <div className="inline-flex items-center gap-2 border border-[#00D4FF]/30 rounded-full px-4 py-1.5 mb-8 bg-[#00D4FF]/5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] animate-pulse" />
+          <span className="text-xs text-[#00D4FF] font-medium">Now accepting early access requests</span>
+        </div>
+        <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">Try Kurious on<br /><span className="text-[#00D4FF]">Your Data</span></h2>
+        <p className="text-xl text-[#A0A0A0] mb-12 leading-relaxed">Connect your private knowledge base. Get answers in 0.18 seconds. No training required.</p>
+        {submitted ? (
+          <div className="border border-[#00D4FF]/30 rounded-2xl p-10 bg-[#00D4FF]/5 animate-fade-in">
+            <div className="text-5xl mb-4">🎉</div>
+            <h3 className="text-2xl font-bold text-white mb-2">You're on the list!</h3>
+            <p className="text-[#A0A0A0]">We'll reach out as soon as early access opens up.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mb-8">
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" className="flex-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white placeholder-[#A0A0A0]/50 focus:outline-none focus:border-[#00D4FF] transition-colors" />
+            <button type="submit" disabled={!email.trim()} className="bg-[#00D4FF] text-[#0D0D0D] font-semibold rounded-xl px-6 py-3 text-sm hover:bg-cyan-300 transition-colors disabled:opacity-50 whitespace-nowrap">Request Early Access</button>
+          </form>
+        )}
+        <div className="flex items-center justify-center gap-6 text-xs text-[#A0A0A0]">
+          <span>✓ No training required</span><span>✓ Live in days</span><span>✓ Any data format</span>
+        </div>
+        <div className="mt-16 pt-8 border-t border-[#2A2A2A]">
+          <div className="flex items-center justify-center gap-2.5 mb-2">
+            <img src="./logo.png" alt="AIntropy" className="w-6 h-6 rounded-lg object-cover mix-blend-lighten" />
+            <span className="font-bold text-sm text-white"><span className="text-[#00D4FF]">AI</span>ntropy</span>
+          </div>
+          <p className="text-xs text-[#A0A0A0]/50">© 2026 AIntropy. The Hippocampus of Your Private AI.</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default function App() {
+  const [activeSection, setActiveSection] = useState('mission')
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => { entries.forEach(entry => { if (entry.isIntersecting) setActiveSection(entry.target.id) }) },
+      { threshold: 0.3 }
+    )
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s))
+    return () => observer.disconnect()
+  }, [])
+  return (
+    <div className="min-h-screen bg-[#0D0D0D] text-white font-sans">
+      <Nav activeSection={activeSection} />
+      <div className="pt-14">
+        <MissionSection />
+        <ChallengeSection />
+        <HumanCostSection />
+        <VillainSection />
+        <ActionSection />
+        <FormatsSection />
+        <ResultsSection />
+        <CTASection />
       </div>
     </div>
   )
